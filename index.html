@@ -1,0 +1,2967 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Setup Sul — Dashboard Operacional</title>
+
+<!-- ============================================================
+  DEPENDÊNCIAS EXTERNAS
+  Chart.js para gráficos
+============================================================ -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+/* ============================================================
+  VARIÁVEIS E RESET
+============================================================ */
+:root {
+  --green-900: #064e3b;
+  --green-800: #065f46;
+  --green-700: #047857;
+  --green-600: #059669;
+  --green-500: #10b981;
+  --green-400: #34d399;
+  --green-100: #d1fae5;
+  --green-50:  #ecfdf5;
+
+  --red-600: #dc2626;
+  --red-500: #ef4444;
+  --red-100: #fee2e2;
+  --red-50:  #fef2f2;
+
+  --blue-600: #2563eb;
+  --blue-500: #3b82f6;
+  --blue-100: #dbeafe;
+  --blue-50:  #eff6ff;
+
+  --purple-600: #7c3aed;
+  --purple-500: #8b5cf6;
+  --purple-100: #ede9fe;
+  --purple-50:  #f5f3ff;
+
+  --orange-600: #ea580c;
+  --orange-500: #f97316;
+  --orange-100: #ffedd5;
+  --orange-50:  #fff7ed;
+
+  --gray-900: #111827;
+  --gray-800: #1f2937;
+  --gray-700: #374151;
+  --gray-600: #4b5563;
+  --gray-500: #6b7280;
+  --gray-400: #9ca3af;
+  --gray-300: #d1d5db;
+  --gray-200: #e5e7eb;
+  --gray-100: #f3f4f6;
+  --gray-50:  #f9fafb;
+
+  --white: #ffffff;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,.07), 0 1px 2px rgba(0,0,0,.05);
+  --shadow-md: 0 4px 16px rgba(0,0,0,.08), 0 2px 6px rgba(0,0,0,.05);
+  --shadow-lg: 0 10px 32px rgba(0,0,0,.1), 0 4px 12px rgba(0,0,0,.06);
+  --radius: 14px;
+  --radius-sm: 8px;
+  --font: 'DM Sans', sans-serif;
+  --font-mono: 'DM Mono', monospace;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font);
+  background: var(--gray-50);
+  color: var(--gray-900);
+  min-height: 100vh;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* ============================================================
+  HEADER
+============================================================ */
+.header {
+  background: var(--white);
+  border-bottom: 1px solid var(--gray-200);
+  padding: 0 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 64px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: var(--shadow-sm);
+}
+
+.header-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logo-mark {
+  width: 36px;
+  height: 36px;
+  background: linear-gradient(135deg, var(--green-600), var(--green-800));
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.logo-mark svg { width: 20px; height: 20px; fill: white; }
+
+.brand-text h1 {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--gray-900);
+  letter-spacing: -.3px;
+  line-height: 1.2;
+}
+
+.brand-text p {
+  font-size: 11px;
+  color: var(--gray-500);
+  font-weight: 400;
+  letter-spacing: .2px;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.last-update {
+  font-size: 11.5px;
+  color: var(--gray-500);
+  font-family: var(--font-mono);
+  background: var(--gray-100);
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--gray-200);
+}
+
+.btn-refresh {
+  background: var(--green-600);
+  color: white;
+  border: none;
+  padding: 8px 18px;
+  border-radius: var(--radius-sm);
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  transition: background .18s, transform .1s;
+  letter-spacing: -.1px;
+}
+
+.btn-refresh:hover { background: var(--green-700); transform: translateY(-1px); }
+.btn-refresh:active { transform: translateY(0); }
+
+.btn-refresh svg { width: 14px; height: 14px; }
+
+/* ============================================================
+  LAYOUT PRINCIPAL
+============================================================ */
+.main {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 28px 32px 48px;
+}
+
+/* ============================================================
+  BARRA DE FILTROS — MULTI-SELECT
+  [MELHORIA 1] Substituídos os <select> simples por multi-select customizado
+============================================================ */
+.filters-bar {
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  flex-wrap: wrap;
+  box-shadow: var(--shadow-sm);
+}
+
+.filters-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--gray-500);
+  letter-spacing: .8px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  padding-right: 8px;
+  border-right: 1px solid var(--gray-200);
+  padding-top: 6px;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  position: relative;
+}
+
+.filter-group label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--gray-500);
+  letter-spacing: .4px;
+  text-transform: uppercase;
+}
+
+/* Multi-select customizado */
+.ms-wrapper {
+  position: relative;
+  min-width: 140px;
+}
+
+.ms-trigger {
+  font-family: var(--font);
+  font-size: 12.5px;
+  color: var(--gray-800);
+  background: var(--gray-50);
+  border: 1px solid var(--gray-300);
+  border-radius: var(--radius-sm);
+  padding: 6px 28px 6px 10px;
+  outline: none;
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+  width: 100%;
+  transition: border-color .15s, box-shadow .15s;
+}
+
+.ms-trigger:focus, .ms-trigger.open {
+  border-color: var(--green-500);
+  box-shadow: 0 0 0 3px rgba(16,185,129,.12);
+}
+
+.ms-trigger::after {
+  content: '▾';
+  position: absolute;
+  right: 9px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 11px;
+  color: var(--gray-400);
+  pointer-events: none;
+}
+
+.ms-dropdown {
+  display: none;
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  min-width: 100%;
+  max-width: 240px;
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-md);
+  z-index: 500;
+  overflow: hidden;
+}
+
+.ms-dropdown.open { display: block; }
+
+.ms-search {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--gray-100);
+}
+
+.ms-search input {
+  width: 100%;
+  font-family: var(--font);
+  font-size: 12px;
+  color: var(--gray-800);
+  background: var(--gray-50);
+  border: 1px solid var(--gray-200);
+  border-radius: 6px;
+  padding: 5px 8px;
+  outline: none;
+}
+
+.ms-search input:focus {
+  border-color: var(--green-400);
+}
+
+.ms-options {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.ms-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px;
+  font-size: 12.5px;
+  color: var(--gray-700);
+  cursor: pointer;
+  transition: background .1s;
+}
+
+.ms-option:hover { background: var(--gray-50); }
+
+.ms-option input[type="checkbox"] {
+  accent-color: var(--green-600);
+  width: 13px;
+  height: 13px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.ms-option.selected { background: var(--green-50); color: var(--green-800); }
+
+.ms-footer {
+  padding: 6px 10px;
+  border-top: 1px solid var(--gray-100);
+  display: flex;
+  gap: 6px;
+}
+
+.ms-btn {
+  flex: 1;
+  font-family: var(--font);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 0;
+  border-radius: 5px;
+  border: none;
+  cursor: pointer;
+  transition: background .12s;
+}
+
+.ms-btn-all  { background: var(--green-50);  color: var(--green-700); }
+.ms-btn-none { background: var(--gray-100);  color: var(--gray-600); }
+.ms-btn-all:hover  { background: var(--green-100); }
+.ms-btn-none:hover { background: var(--gray-200); }
+
+/* Badge de contagem no trigger */
+.ms-count {
+  display: inline-block;
+  background: var(--green-600);
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+  border-radius: 99px;
+  padding: 1px 5px;
+  margin-left: 4px;
+  line-height: 1.4;
+}
+
+/* Input de data (mantido original) */
+.filter-input {
+  font-family: var(--font);
+  font-size: 12.5px;
+  color: var(--gray-800);
+  background: var(--gray-50);
+  border: 1px solid var(--gray-300);
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+  outline: none;
+  transition: border-color .15s, box-shadow .15s;
+  min-width: 130px;
+  cursor: pointer;
+}
+
+.filter-input:focus {
+  border-color: var(--green-500);
+  box-shadow: 0 0 0 3px rgba(16,185,129,.12);
+}
+
+.btn-clear {
+  font-family: var(--font);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--gray-600);
+  background: var(--gray-100);
+  border: 1px solid var(--gray-300);
+  border-radius: var(--radius-sm);
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: all .15s;
+  white-space: nowrap;
+  margin-left: auto;
+  align-self: flex-end;
+}
+
+.btn-clear:hover { background: var(--gray-200); color: var(--gray-800); }
+
+/* ============================================================
+  KPI CARDS — Grid expandido para 8 cards
+  [MELHORIA 2] Adicionados 3 novos KPIs + cores distintas
+============================================================ */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+@media (max-width: 1400px) { .kpi-grid { grid-template-columns: repeat(4, 1fr); } }
+@media (max-width: 900px)  { .kpi-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 600px)  { .kpi-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 400px)  { .kpi-grid { grid-template-columns: 1fr; } }
+
+.kpi-card {
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius);
+  padding: 18px 16px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-shadow: var(--shadow-sm);
+  position: relative;
+  overflow: hidden;
+  transition: transform .18s, box-shadow .18s;
+}
+
+.kpi-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+
+.kpi-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: var(--green-500);
+  border-radius: var(--radius) var(--radius) 0 0;
+}
+
+.kpi-card.red::before    { background: var(--red-500); }
+.kpi-card.blue::before   { background: var(--blue-500); }
+.kpi-card.purple::before { background: var(--purple-500); }
+.kpi-card.orange::before { background: var(--orange-500); }
+
+.kpi-icon {
+  width: 32px; height: 32px;
+  border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--green-50);
+  flex-shrink: 0;
+}
+
+.kpi-card.red    .kpi-icon { background: var(--red-50); }
+.kpi-card.blue   .kpi-icon { background: var(--blue-50); }
+.kpi-card.purple .kpi-icon { background: var(--purple-50); }
+.kpi-card.orange .kpi-icon { background: var(--orange-50); }
+
+.kpi-icon svg { width: 16px; height: 16px; fill: var(--green-600); }
+.kpi-card.red    .kpi-icon svg { fill: var(--red-600); }
+.kpi-card.blue   .kpi-icon svg { fill: var(--blue-600); }
+.kpi-card.purple .kpi-icon svg { fill: var(--purple-600); }
+.kpi-card.orange .kpi-icon svg { fill: var(--orange-600); }
+
+.kpi-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--gray-500);
+  letter-spacing: .5px;
+  text-transform: uppercase;
+  line-height: 1.3;
+}
+
+.kpi-value {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--gray-900);
+  letter-spacing: -1px;
+  line-height: 1;
+}
+
+.kpi-card.red    .kpi-value { color: var(--red-600); }
+.kpi-card.blue   .kpi-value { color: var(--blue-600); }
+.kpi-card.purple .kpi-value { color: var(--purple-600); }
+.kpi-card.orange .kpi-value { color: var(--orange-600); }
+
+.kpi-sub {
+  font-size: 10px;
+  color: var(--gray-500);
+  font-weight: 500;
+}
+
+
+/* ============================================================
+  GRID DE GRÁFICOS
+============================================================ */
+.charts-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+.charts-grid .chart-wide { grid-column: 1 / -1; }
+
+@media (max-width: 900px) {
+  .charts-grid { grid-template-columns: 1fr; }
+  .charts-grid .chart-wide { grid-column: auto; }
+}
+
+.chart-card {
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius);
+  padding: 20px;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.chart-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.chart-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--gray-800);
+  letter-spacing: -.2px;
+}
+
+.chart-subtitle {
+  font-size: 11px;
+  color: var(--gray-500);
+  margin-top: 2px;
+}
+
+.chart-badge {
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 99px;
+  white-space: nowrap;
+  background: var(--green-50);
+  color: var(--green-700);
+  border: 1px solid var(--green-100);
+}
+
+.chart-wrap {
+  position: relative;
+  height: 220px;
+}
+
+.chart-wrap-tall { height: 260px; }
+.chart-wrap-donut { height: 200px; }
+
+/* ============================================================
+  GRID DE ROSCA — LINHA 3x DONUTS
+============================================================ */
+.donuts-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+@media (max-width: 768px) { .donuts-grid { grid-template-columns: 1fr; } }
+
+/* ============================================================
+  INSIGHTS
+============================================================ */
+.insights-section {
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius);
+  padding: 22px 24px;
+  margin-bottom: 24px;
+  box-shadow: var(--shadow-sm);
+}
+
+.section-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--gray-800);
+  letter-spacing: -.2px;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.section-title svg { width: 16px; height: 16px; fill: var(--green-600); }
+
+.insights-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.insight-item {
+  background: var(--gray-50);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+  border-left: 3px solid var(--green-500);
+}
+
+.insight-item.critical { border-left-color: var(--red-500); }
+
+.insight-item-label {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--gray-500);
+  letter-spacing: .5px;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.insight-item-value {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--gray-900);
+  letter-spacing: -.4px;
+}
+
+.insight-item.critical .insight-item-value { color: var(--red-600); }
+
+.insight-item-desc {
+  font-size: 11px;
+  color: var(--gray-500);
+  margin-top: 2px;
+}
+
+/* ============================================================
+  TABELA OPERACIONAL
+============================================================ */
+.table-section {
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+
+.table-header {
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--gray-200);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.table-count {
+  font-size: 11px;
+  color: var(--gray-500);
+  font-family: var(--font-mono);
+  background: var(--gray-100);
+  padding: 3px 8px;
+  border-radius: 6px;
+}
+
+.table-wrap { overflow-x: auto; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+}
+
+thead th {
+  background: var(--gray-50);
+  color: var(--gray-600);
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+  padding: 10px 16px;
+  text-align: left;
+  border-bottom: 1px solid var(--gray-200);
+  white-space: nowrap;
+  user-select: none;
+}
+
+thead th.sortable {
+  cursor: pointer;
+  transition: background .15s, color .15s;
+}
+thead th.sortable:hover {
+  background: var(--gray-100);
+  color: var(--gray-900);
+}
+thead th.sortable.sort-asc,
+thead th.sortable.sort-desc {
+  background: var(--green-50);
+  color: var(--green-700);
+}
+
+/* Ícone de ordenação */
+thead th.sortable .sort-icon {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 1px;
+  vertical-align: middle;
+  margin-left: 5px;
+  opacity: .35;
+  transition: opacity .15s;
+}
+thead th.sortable:hover .sort-icon,
+thead th.sortable.sort-asc .sort-icon,
+thead th.sortable.sort-desc .sort-icon { opacity: 1; }
+
+thead th.sortable .sort-icon svg { display: block; }
+thead th.sortable.sort-asc  .sort-icon .arr-down { opacity: .2; }
+thead th.sortable.sort-desc .sort-icon .arr-up   { opacity: .2; }
+
+tbody tr {
+  border-bottom: 1px solid var(--gray-100);
+  transition: background .1s;
+}
+
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: var(--gray-50); }
+
+tbody td {
+  padding: 11px 16px;
+  color: var(--gray-700);
+  white-space: nowrap;
+}
+
+.td-oc { font-family: var(--font-mono); font-weight: 600; color: var(--gray-900); font-size: 12px; }
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 99px;
+}
+
+.badge-green  { background: var(--green-50);  color: var(--green-700); border: 1px solid var(--green-100); }
+.badge-red    { background: var(--red-50);     color: var(--red-600);   border: 1px solid var(--red-100); }
+.badge-gray   { background: var(--gray-100);   color: var(--gray-600);  border: 1px solid var(--gray-200); }
+/* [MELHORIA 6] Badge azul para "Enviado ao Fechamento" */
+.badge-blue   { background: var(--blue-50);    color: var(--blue-600);  border: 1px solid var(--blue-100); }
+
+.badge::before {
+  content: '';
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+}
+
+.td-valor { font-family: var(--font-mono); color: var(--gray-800); font-weight: 500; }
+
+/* ============================================================
+  ESTADO DE CARREGAMENTO / ERRO
+============================================================ */
+.state-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(255,255,255,.92);
+  z-index: 200;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.state-overlay.visible { display: flex; }
+
+.spinner {
+  width: 44px; height: 44px;
+  border: 3px solid var(--green-100);
+  border-top-color: var(--green-600);
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.state-msg { font-size: 14px; font-weight: 600; color: var(--gray-700); }
+.state-sub  { font-size: 12px; color: var(--gray-500); }
+
+.error-box {
+  display: none;
+  background: var(--red-50);
+  border: 1px solid var(--red-100);
+  color: var(--red-600);
+  padding: 14px 18px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 20px;
+  align-items: center;
+  gap: 10px;
+}
+
+.error-box.visible { display: flex; }
+
+/* ============================================================
+  FOOTER
+============================================================ */
+.footer {
+  text-align: center;
+  font-size: 11px;
+  color: var(--gray-400);
+  padding: 8px 0 32px;
+  letter-spacing: .2px;
+}
+
+/* ============================================================
+  BOTÃO EXPORTAR XLSX
+============================================================ */
+.btn-export {
+  font-family: var(--font);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--white);
+  background: var(--green-600);
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 7px 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: background .15s, transform .1s;
+  white-space: nowrap;
+}
+.btn-export:hover { background: var(--green-700); transform: translateY(-1px); }
+.btn-export:active { transform: translateY(0); }
+.btn-export svg { width: 13px; height: 13px; }
+
+/* ============================================================
+  SEÇÃO DE DASHBOARDS ADICIONAIS
+============================================================ */
+.dash-section-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--gray-800);
+  letter-spacing: -.3px;
+  margin-bottom: 16px;
+  margin-top: 32px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid var(--gray-200);
+}
+.dash-section-title svg { width: 18px; height: 18px; fill: var(--green-600); }
+.dash-section-title .dash-badge {
+  font-size: 10px;
+  font-weight: 700;
+  background: var(--green-50);
+  color: var(--green-700);
+  border: 1px solid var(--green-100);
+  border-radius: 99px;
+  padding: 2px 9px;
+  letter-spacing: .3px;
+}
+
+/* Tabela de resumo de status dos dashboards adicionais */
+.status-summary-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+  margin-top: 6px;
+}
+.status-summary-table th {
+  background: var(--gray-50);
+  color: var(--gray-600);
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+  padding: 9px 14px;
+  text-align: left;
+  border-bottom: 1px solid var(--gray-200);
+  white-space: nowrap;
+}
+.status-summary-table td {
+  padding: 9px 14px;
+  color: var(--gray-700);
+  border-bottom: 1px solid var(--gray-100);
+}
+.status-summary-table tr:last-child td { border-bottom: none; }
+.status-summary-table tr:hover td { background: var(--gray-50); }
+.status-summary-table .td-count {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--gray-900);
+  text-align: right;
+}
+.status-summary-table tr.total-row td {
+  background: var(--green-50);
+  color: var(--green-800);
+  font-weight: 700;
+  border-top: 2px solid var(--green-200);
+}
+.status-summary-table tr.total-row .td-count {
+  color: var(--green-700);
+  font-size: 16px;
+}
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+  OVERLAY DE CARREGAMENTO
+============================================================ -->
+<div class="state-overlay" id="loadingOverlay">
+  <div class="spinner"></div>
+  <p class="state-msg">Carregando dados operacionais…</p>
+  <p class="state-sub">Conectando à base de dados do Google Sheets</p>
+</div>
+
+<!-- ============================================================
+  HEADER
+============================================================ -->
+<header class="header">
+  <div class="header-brand">
+    <div class="logo-mark">
+      <svg viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+    </div>
+    <div class="brand-text">
+      <h1>Setup Sul</h1>
+      <p>Dashboard Operacional de Ocorrências</p>
+    </div>
+  </div>
+  <div class="header-actions">
+    <span class="last-update" id="lastUpdate">—</span>
+    <button class="btn-refresh" onclick="loadData()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 4v6h6"/><path d="M3.51 15a9 9 0 1 0 .49-4"/></svg>
+      Atualizar Dados
+    </button>
+  </div>
+</header>
+
+<!-- ============================================================
+  CONTEÚDO PRINCIPAL
+============================================================ -->
+<main class="main">
+
+  <!-- Mensagem de erro -->
+  <div class="error-box" id="errorBox">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    <span id="errorMsg"></span>
+  </div>
+
+  <!-- ============================================================
+    FILTROS AVANÇADOS — MULTI-SELECT
+    [MELHORIA 1] Cada filtro agora suporta seleção múltipla
+    Adicionado filtro CIDADE_DA_OC
+  ============================================================ -->
+  <div class="filters-bar">
+    <span class="filters-label">Filtros</span>
+
+    <!-- Período -->
+    <div class="filter-group">
+      <label>De</label>
+      <input type="date" class="filter-input" id="filterDateFrom">
+    </div>
+    <div class="filter-group">
+      <label>Até</label>
+      <input type="date" class="filter-input" id="filterDateTo">
+    </div>
+
+    <!-- Multi-selects -->
+    <div class="filter-group">
+      <label>Seccional</label>
+      <div class="ms-wrapper" id="ms-SECCIONAL">
+        <span class="ms-trigger" tabindex="0">Todas</span>
+        <div class="ms-dropdown">
+          <div class="ms-search"><input type="text" placeholder="Buscar…"></div>
+          <div class="ms-options"></div>
+          <div class="ms-footer">
+            <button class="ms-btn ms-btn-all">Todos</button>
+            <button class="ms-btn ms-btn-none">Limpar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="filter-group">
+      <label>Projetista</label>
+      <div class="ms-wrapper" id="ms-PROJETISTA">
+        <span class="ms-trigger" tabindex="0">Todos</span>
+        <div class="ms-dropdown">
+          <div class="ms-search"><input type="text" placeholder="Buscar…"></div>
+          <div class="ms-options"></div>
+          <div class="ms-footer">
+            <button class="ms-btn ms-btn-all">Todos</button>
+            <button class="ms-btn ms-btn-none">Limpar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="filter-group">
+      <label>Status</label>
+      <div class="ms-wrapper" id="ms-STATUS">
+        <span class="ms-trigger" tabindex="0">Todos</span>
+        <div class="ms-dropdown">
+          <div class="ms-search"><input type="text" placeholder="Buscar…"></div>
+          <div class="ms-options"></div>
+          <div class="ms-footer">
+            <button class="ms-btn ms-btn-all">Todos</button>
+            <button class="ms-btn ms-btn-none">Limpar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="filter-group">
+      <label>Equipe</label>
+      <div class="ms-wrapper" id="ms-EQUIPE">
+        <span class="ms-trigger" tabindex="0">Todas</span>
+        <div class="ms-dropdown">
+          <div class="ms-search"><input type="text" placeholder="Buscar…"></div>
+          <div class="ms-options"></div>
+          <div class="ms-footer">
+            <button class="ms-btn ms-btn-all">Todos</button>
+            <button class="ms-btn ms-btn-none">Limpar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- [NOVO FILTRO] Cidade da OC -->
+    <div class="filter-group">
+      <label>Cidade da OC</label>
+      <div class="ms-wrapper" id="ms-CIDADE_DA_OC">
+        <span class="ms-trigger" tabindex="0">Todas</span>
+        <div class="ms-dropdown">
+          <div class="ms-search"><input type="text" placeholder="Buscar…"></div>
+          <div class="ms-options"></div>
+          <div class="ms-footer">
+            <button class="ms-btn ms-btn-all">Todos</button>
+            <button class="ms-btn ms-btn-none">Limpar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn-clear" onclick="clearFilters()">✕ Limpar filtros</button>
+  </div>
+
+  <!-- ============================================================
+    KPIs — 8 CARDS
+    [MELHORIA 2] Adicionados: Ordens Criadas, PEPs via SAP, Enviado ao Fechamento
+    [MELHORIA 3] Críticas e Dentro do Prazo excluem "Enviado ao Fechamento"
+  ============================================================ -->
+  <div class="kpi-grid">
+
+    <!-- 1. Total -->
+    <div class="kpi-card">
+      <div class="kpi-icon"><svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2"/></svg></div>
+      <div class="kpi-label">Total de Ocorrências</div>
+      <div class="kpi-value" id="kpiTotal">—</div>
+      <div class="kpi-sub">registros carregados</div>
+    </div>
+
+    <!-- 2. Críticas (excluindo Enviado ao Fechamento) -->
+    <div class="kpi-card red">
+      <div class="kpi-icon"><svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+      <div class="kpi-label">Ocorrências Críticas</div>
+      <div class="kpi-value" id="kpiCriticas">—</div>
+      <div class="kpi-sub">prazo &gt; 48h (em andamento)</div>
+    </div>
+
+    <!-- 3. Dentro do Prazo (excluindo Enviado ao Fechamento) -->
+    <div class="kpi-card">
+      <div class="kpi-icon"><svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
+      <div class="kpi-label">Dentro do Prazo</div>
+      <div class="kpi-value" id="kpiPrazo">—</div>
+      <div class="kpi-sub">prazo ≤ 48h (em andamento)</div>
+    </div>
+
+    <!-- 4. Valor Total -->
+    <div class="kpi-card">
+      <div class="kpi-icon"><svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+      <div class="kpi-label">Valor Total</div>
+      <div class="kpi-value" id="kpiValor" style="font-size:18px">—</div>
+      <div class="kpi-sub">soma de VALOR</div>
+    </div>
+
+    <!-- 5. Projetos Criados -->
+    <div class="kpi-card">
+      <div class="kpi-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></div>
+      <div class="kpi-label">Projetos Criados</div>
+      <div class="kpi-value" id="kpiProjetos">—</div>
+      <div class="kpi-sub">NOTA_PROJ iniciada com "4"</div>
+    </div>
+
+    <!-- 6. [NOVO] Ordens Criadas -->
+    <div class="kpi-card blue">
+      <div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg></div>
+      <div class="kpi-label">Ordens Criadas</div>
+      <div class="kpi-value" id="kpiOrdens">—</div>
+      <div class="kpi-sub">PEP_ORDEM contém "ORDEM"</div>
+    </div>
+
+    <!-- 7. [NOVO] PEPs via SAP -->
+    <div class="kpi-card blue">
+      <div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div>
+      <div class="kpi-label">PEPs via SAP</div>
+      <div class="kpi-value" id="kpiPepsSap">—</div>
+      <div class="kpi-sub">NOTA_PROJ inicia com "0"</div>
+    </div>
+
+    <!-- 8. [NOVO] Enviado ao Fechamento -->
+    <div class="kpi-card purple">
+      <div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg></div>
+      <div class="kpi-label">Enviado ao Fechamento</div>
+      <div class="kpi-value" id="kpiFechamento">—</div>
+      <div class="kpi-sub">STATUS = "Enviado ao Fechamento"</div>
+    </div>
+
+    <!-- 9. Na Fila para Projeto -->
+    <div class="kpi-card orange" id="cardFilaNaFila">
+      <div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+      <div class="kpi-label">Na Fila para Projeto</div>
+      <div class="kpi-value" id="kpiFilaNaFila">—</div>
+      <div class="kpi-sub">aguardando projetista</div>
+    </div>
+
+    <!-- 10. Pendência de Informação -->
+    <div class="kpi-card orange" id="cardFilaPendencia">
+      <div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
+      <div class="kpi-label">Pendência de Informação</div>
+      <div class="kpi-value" id="kpiFilaPendencia">—</div>
+      <div class="kpi-sub">pra projetar</div>
+    </div>
+
+    <!-- 11. OC em Cadastro -->
+    <div class="kpi-card orange" id="cardFilaCadastro">
+      <div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="13" x2="12" y2="17"/><line x1="10" y1="15" x2="14" y2="15"/></svg></div>
+      <div class="kpi-label">OC em Cadastro</div>
+      <div class="kpi-value" id="kpiFilaCadastro">—</div>
+      <div class="kpi-sub">em cadastramento</div>
+    </div>
+
+    <!-- 12. Aguardando Execução em Campo -->
+    <div class="kpi-card orange" id="cardFilaExecucao">
+      <div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>
+      <div class="kpi-label">Aguardando Execução</div>
+      <div class="kpi-value" id="kpiFilaExecucao">—</div>
+      <div class="kpi-sub">execução em campo</div>
+    </div>
+
+  </div>
+
+  <!-- LINHA 1 DE GRÁFICOS -->
+  <div class="charts-grid">
+    <!-- Gráfico 1: Status x Prazo -->
+    <div class="chart-card chart-wide">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">Status × Prazo de Aplicação</div>
+          <div class="chart-subtitle">Distribuição por status com destaque para atrasos</div>
+        </div>
+        <span class="chart-badge" id="badge1">—</span>
+      </div>
+      <div class="chart-wrap chart-wrap-tall">
+        <canvas id="chartStatusPrazo"></canvas>
+      </div>
+    </div>
+
+    <!-- Gráfico 2: Produção por Projetista -->
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">Produção por Projetista</div>
+          <div class="chart-subtitle">Total de ocorrências por responsável</div>
+        </div>
+      </div>
+      <div class="chart-wrap chart-wrap-tall">
+        <canvas id="chartProducao"></canvas>
+      </div>
+    </div>
+
+    <!-- Gráfico 3: Atraso por Projetista -->
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">Atraso por Projetista</div>
+          <div class="chart-subtitle">Pendentes com o projetista (excl. Enviado ao Fechamento)</div>
+        </div>
+      </div>
+      <div class="chart-wrap chart-wrap-tall">
+        <canvas id="chartAtraso"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- LINHA 2 DE GRÁFICOS -->
+  <div class="charts-grid" style="grid-template-columns:1fr 1fr;">
+    <!-- Gráfico 4: Ocorrências por Seccional -->
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">Ocorrências por Seccional</div>
+          <div class="chart-subtitle">Volume por área geográfica</div>
+        </div>
+      </div>
+      <div class="chart-wrap chart-wrap-tall">
+        <canvas id="chartSeccional"></canvas>
+      </div>
+    </div>
+
+    <!-- Gráfico 5: Evolução temporal -->
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">Evolução das Ocorrências</div>
+          <div class="chart-subtitle">Tendência por DATA_DA_REALIZACAO</div>
+        </div>
+      </div>
+      <div class="chart-wrap chart-wrap-tall">
+        <canvas id="chartEvolucao"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Status SAP — barras horizontais full-width -->
+  <div class="charts-grid" style="grid-template-columns:1fr; margin-bottom:0; margin-bottom:20px;">
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">Status SAP</div>
+          <div class="chart-subtitle">Distribuição de ocorrências por status no SAP</div>
+        </div>
+      </div>
+      <div class="chart-wrap" id="chartStatusSapWrap" style="height:220px;">
+        <canvas id="chartStatusSap"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- LINHA 3: DONUTS (Cliente Desligado + Possui TR) -->
+  <div class="donuts-grid" style="grid-template-columns: repeat(2,1fr);">
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">Cliente Desligado</div>
+          <div class="chart-subtitle">Ocorrências com/sem desligamento</div>
+        </div>
+      </div>
+      <div class="chart-wrap chart-wrap-donut">
+        <canvas id="chartCliente"></canvas>
+      </div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">Possui TR</div>
+          <div class="chart-subtitle">Ocorrências com/sem TR</div>
+        </div>
+      </div>
+      <div class="chart-wrap chart-wrap-donut">
+        <canvas id="chartTr"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- INSIGHTS -->
+  <div class="insights-section">
+    <div class="section-title">
+      <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 15h-1v-4H10v-1h2V9h1v3h1v1h-1v4z"/></svg>
+      Insights Operacionais Automáticos
+    </div>
+    <div class="insights-grid" id="insightsGrid">
+      <!-- Gerado via JS -->
+    </div>
+  </div>
+
+  <!-- ============================================================
+    DASHBOARD: Pendente de Criação de Nota PROJ/PEP - EQTL - Cenário Atual
+    (com pareto 48h)
+  ============================================================ -->
+  <div class="dash-section-title">
+    <svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2"/></svg>
+    Pendente de Criação de Nota PROJ/PEP - EQTL - Cenário Atual
+    <span class="dash-badge">Com Pareto 48h</span>
+  </div>
+  <div class="charts-grid" style="grid-template-columns:1fr 1fr; margin-bottom:24px;">
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">Distribuição por Status × Prazo</div>
+          <div class="chart-subtitle">Dentro de 48h vs. Mais de 48h por status EQTL</div>
+        </div>
+        <span class="chart-badge" id="badgeEqtlPareto">—</span>
+      </div>
+      <div class="chart-wrap" style="height:280px;">
+        <canvas id="chartEqtlPareto"></canvas>
+      </div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">Resumo de Ocorrências — EQTL</div>
+          <div class="chart-subtitle">Contagem por status pendente</div>
+        </div>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="status-summary-table">
+          <thead><tr><th>Status</th><th style="text-align:right;">Qtd.</th></tr></thead>
+          <tbody id="tbodyEqtl"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+    DASHBOARD: Pendente de Criação de Nota PROJ/PEP - EQTL - Barras Simples
+  ============================================================ -->
+  <div class="dash-section-title">
+    <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18"/></svg>
+    Pendente de Criação de Nota PROJ/PEP - EQTL - Cenário Atual
+    <span class="dash-badge">Barras Simples</span>
+  </div>
+  <div class="charts-grid" style="grid-template-columns:1fr; margin-bottom:24px;">
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">Volume por Status — EQTL (sem divisão de prazos)</div>
+          <div class="chart-subtitle">Quantidade total de ocorrências por status pendente</div>
+        </div>
+      </div>
+      <div class="chart-wrap" style="height:260px;">
+        <canvas id="chartEqtlSimples"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+    DASHBOARD: Pendente de Criação - PCP SETUP
+  ============================================================ -->
+  <div class="dash-section-title">
+    <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 15h-1v-4H10v-1h2V9h1v3h1v1h-1v4z"/></svg>
+    Pendente de Criação - PCP SETUP
+    <span class="dash-badge">Cenário Atual</span>
+  </div>
+  <div class="charts-grid" style="grid-template-columns:1fr 1fr; margin-bottom:24px;">
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">Distribuição por Status × Prazo — PCP SETUP</div>
+          <div class="chart-subtitle">Dentro de 48h vs. Mais de 48h por status</div>
+        </div>
+        <span class="chart-badge" id="badgePcpPareto">—</span>
+      </div>
+      <div class="chart-wrap" style="height:320px;">
+        <canvas id="chartPcpPareto"></canvas>
+      </div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">Resumo de Ocorrências — PCP SETUP</div>
+          <div class="chart-subtitle">Contagem por status pendente</div>
+        </div>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="status-summary-table">
+          <thead><tr><th>Status</th><th style="text-align:right;">Qtd.</th></tr></thead>
+          <tbody id="tbodyPcp"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- TABELA OPERACIONAL -->
+  <div class="table-section">
+    <div class="table-header">
+      <div class="section-title" style="margin:0">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18"/></svg>
+        Tabela Operacional
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span class="table-count" id="tableCount">— registros</span>
+        <button class="btn-export" onclick="exportTableXLSX()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Exportar XLSX
+        </button>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th class="sortable" data-col="OCORRENCIA" onclick="sortTable('OCORRENCIA')">Ocorrência<span class="sort-icon"><svg class="arr-up" width="7" height="5" viewBox="0 0 7 5"><path d="M3.5 0L7 5H0z" fill="currentColor"/></svg><svg class="arr-down" width="7" height="5" viewBox="0 0 7 5"><path d="M3.5 5L0 0h7z" fill="currentColor"/></svg></span></th>
+            <th class="sortable" data-col="STATUS" onclick="sortTable('STATUS')">Status<span class="sort-icon"><svg class="arr-up" width="7" height="5" viewBox="0 0 7 5"><path d="M3.5 0L7 5H0z" fill="currentColor"/></svg><svg class="arr-down" width="7" height="5" viewBox="0 0 7 5"><path d="M3.5 5L0 0h7z" fill="currentColor"/></svg></span></th>
+            <th class="sortable" data-col="PROJETISTA" onclick="sortTable('PROJETISTA')">Projetista<span class="sort-icon"><svg class="arr-up" width="7" height="5" viewBox="0 0 7 5"><path d="M3.5 0L7 5H0z" fill="currentColor"/></svg><svg class="arr-down" width="7" height="5" viewBox="0 0 7 5"><path d="M3.5 5L0 0h7z" fill="currentColor"/></svg></span></th>
+            <th class="sortable" data-col="SECCIONAL" onclick="sortTable('SECCIONAL')">Seccional<span class="sort-icon"><svg class="arr-up" width="7" height="5" viewBox="0 0 7 5"><path d="M3.5 0L7 5H0z" fill="currentColor"/></svg><svg class="arr-down" width="7" height="5" viewBox="0 0 7 5"><path d="M3.5 5L0 0h7z" fill="currentColor"/></svg></span></th>
+            <th class="sortable" data-col="__DATE_REALIZACAO" onclick="sortTable('__DATE_REALIZACAO')">Realização<span class="sort-icon"><svg class="arr-up" width="7" height="5" viewBox="0 0 7 5"><path d="M3.5 0L7 5H0z" fill="currentColor"/></svg><svg class="arr-down" width="7" height="5" viewBox="0 0 7 5"><path d="M3.5 5L0 0h7z" fill="currentColor"/></svg></span></th>
+            <th class="sortable" data-col="PRAZO_DE_APLICACAO" onclick="sortTable('PRAZO_DE_APLICACAO')">Prazo<span class="sort-icon"><svg class="arr-up" width="7" height="5" viewBox="0 0 7 5"><path d="M3.5 0L7 5H0z" fill="currentColor"/></svg><svg class="arr-down" width="7" height="5" viewBox="0 0 7 5"><path d="M3.5 5L0 0h7z" fill="currentColor"/></svg></span></th>
+            <th class="sortable" data-col="__VALOR" onclick="sortTable('__VALOR')">Valor<span class="sort-icon"><svg class="arr-up" width="7" height="5" viewBox="0 0 7 5"><path d="M3.5 0L7 5H0z" fill="currentColor"/></svg><svg class="arr-down" width="7" height="5" viewBox="0 0 7 5"><path d="M3.5 5L0 0h7z" fill="currentColor"/></svg></span></th>
+          </tr>
+        </thead>
+        <tbody id="tableBody">
+          <tr><td colspan="7" style="text-align:center;padding:32px;color:var(--gray-400)">Aguardando dados…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</main>
+
+<footer class="footer">
+  Setup Sul — Dashboard Operacional &nbsp;·&nbsp; Dados via Google Sheets CSV
+</footer>
+
+<!-- ============================================================
+  JAVASCRIPT PRINCIPAL
+============================================================ -->
+<script>
+/* ============================================================
+  ██████╗  ██████╗ ███╗   ██╗███████╗██╗ ██████╗
+  ██╔════╝██╔═══██╗████╗  ██║██╔════╝██║██╔════╝
+  ██║     ██║   ██║██╔██╗ ██║█████╗  ██║██║  ███╗
+  ██║     ██║   ██║██║╚██╗██║██╔══╝  ██║██║   ██║
+  ╚██████╗╚██████╔╝██║ ╚████║██║     ██║╚██████╔╝
+   ╚═════╝ ╚═════╝ ╚═╝  ╚═══╝╚═╝     ╚═╝ ╚═════╝
+============================================================ */
+
+/* ─── ⚙️  CONFIGURAÇÃO — EDITE AQUI O LINK DO SEU CSV ─── */
+const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSjanhs61cGDeOrT5NBf5Kq-IsgCTpcDw2NUp2lferVPW-DgSRP10F-Km3ACJcGNcRfh6qydOEicgFe/pub?gid=1247852345&single=true&output=csv";
+/* ─────────────────────────────────────────────────────── */
+
+// Colunas obrigatórias para validação
+const REQUIRED_COLS = [
+  'OCORRENCIA','STATUS','DATA_DA_REALIZACAO','EQUIPE','TIPO_EQUIPE',
+  'SECCIONAL','CIDADE_DA_OC','POSSUI_TR','QUANT_POSTE_RETIRADO_ALMOX',
+  'CLIENTE_DESLIGADO','PEP_ORDEM','PROJETISTA','DATA_CRIACAO_NOTA',
+  'NOTA_PROJ','DATA_RECORTE','DATA_PROJETO','DATA_CRIACAO_PEP',
+  'STATUS_SAP','ODI','ODD','DATA_LIB_LOG_LOGISTICA','DATA_AEO_SETUP',
+  'DATA_AEO_EQTL','VALOR','PRAZO_DE_APLICACAO'
+];
+
+// Paleta de cores
+const C = {
+  green: '#10b981', greenDark: '#059669', greenLight: '#34d399',
+  red: '#ef4444', redLight: '#fca5a5',
+  gray: '#9ca3af', grayLight: '#e5e7eb',
+  greens: ['#065f46','#047857','#059669','#10b981','#34d399','#6ee7b7','#a7f3d0','#d1fae5'],
+};
+
+// Paleta estendida para donuts com múltiplos segmentos
+function greenPalette(n) {
+  const base = ['#047857','#10b981','#34d399','#065f46','#059669','#6ee7b7','#a7f3d0','#064e3b'];
+  const out = [];
+  for (let i = 0; i < n; i++) out.push(base[i % base.length]);
+  return out;
+}
+
+// Estado global
+let allData = [];
+let filteredData = [];
+let charts = {};
+
+// [MELHORIA 1] Estado dos multi-selects: mapa coluna -> Set de valores selecionados
+// Set vazio = "todos selecionados"
+const msState = {
+  SECCIONAL:    new Set(),
+  PROJETISTA:   new Set(),
+  STATUS:       new Set(),
+  EQUIPE:       new Set(),
+  CIDADE_DA_OC: new Set(),
+};
+
+/* ============================================================
+  UTILITÁRIOS DE PARSE
+============================================================ */
+
+function normalizeHeader(h) {
+  return h.replace(/^["\s]+|["\s]+$/g, '').toUpperCase().replace(/[\s\-]+/g, '_');
+}
+
+function isCritico(val) {
+  if (!val) return false;
+  var v = val.toString().toLowerCase().trim();
+  return v.includes('mais') || v.includes('>') || v === 'nao' || v === 'não' || v.includes('fora');
+}
+
+function isDentroPrazo(val) {
+  if (!val) return false;
+  var v = val.toString().toLowerCase().trim();
+  return v.includes('dentro') || v.includes('<') || v === 'sim' || v.includes('no prazo');
+}
+
+// [MELHORIA 3/5/6] Verifica se o registro foi "Enviado ao Fechamento"
+function isEnviadoFechamento(r) {
+  return (r['STATUS'] || '').trim().toLowerCase() === 'enviado ao fechamento';
+}
+
+function parseDate(str) {
+  if (!str || str.trim() === '') return null;
+  str = str.trim();
+  let m = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
+  if (m) {
+    let y = parseInt(m[3]);
+    if (y < 100) y += 2000;
+    return new Date(y, parseInt(m[2]) - 1, parseInt(m[1]));
+  }
+  m = str.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (m) return new Date(parseInt(m[1]), parseInt(m[2]) - 1, parseInt(m[3]));
+  const d = new Date(str);
+  return isNaN(d) ? null : d;
+}
+
+function fmtDate(d) {
+  if (!d) return '—';
+  return d.toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit', year:'numeric' });
+}
+
+function fmtBRL(v) {
+  if (v == null || isNaN(v)) return '—';
+  return v.toLocaleString('pt-BR', { style:'currency', currency:'BRL', minimumFractionDigits:2 });
+}
+
+function parseNum(str) {
+  if (str === null || str === undefined) return null;
+  var s = str.toString().trim();
+  if (s === '' || s === '-') return null;
+  s = s.replace(/R\$\s*/g, '').trim();
+  var hasDot   = s.indexOf('.') !== -1;
+  var hasComma = s.indexOf(',') !== -1;
+  if (hasDot && hasComma) {
+    if (s.lastIndexOf(',') > s.lastIndexOf('.')) {
+      s = s.replace(/\./g, '').replace(',', '.');
+    } else {
+      s = s.replace(/,/g, '');
+    }
+  } else if (hasComma && !hasDot) {
+    s = s.replace(',', '.');
+  } else if (hasDot && !hasComma) {
+    var parts = s.split('.');
+    if (parts[parts.length - 1].length === 3 && parts.length > 1) {
+      s = s.replace(/\./g, '');
+    }
+  }
+  var n = parseFloat(s);
+  return isNaN(n) ? null : n;
+}
+
+/* ============================================================
+  PARSE ROBUSTO DE CSV
+============================================================ */
+
+function stripBOM(text) {
+  return text.charCodeAt(0) === 0xFEFF ? text.slice(1) : text;
+}
+
+function detectSeparator(firstLine) {
+  let inQ = false, semis = 0, commas = 0;
+  for (const ch of firstLine) {
+    if (ch === '"') { inQ = !inQ; continue; }
+    if (inQ) continue;
+    if (ch === ';') semis++;
+    else if (ch === ',') commas++;
+  }
+  return semis >= commas ? ';' : ',';
+}
+
+function splitCSVLine(line, sep) {
+  const fields = [];
+  let cur = '', inQ = false, i = 0;
+  while (i < line.length) {
+    const ch = line[i];
+    if (ch === '"') {
+      if (inQ && line[i + 1] === '"') { cur += '"'; i += 2; continue; }
+      inQ = !inQ; i++; continue;
+    }
+    if (ch === sep && !inQ) { fields.push(cur); cur = ''; i++; continue; }
+    cur += ch; i++;
+  }
+  fields.push(cur);
+  return fields;
+}
+
+function parseCSV(rawText) {
+  const text = stripBOM(rawText).replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+
+  if (!text.trim()) throw new Error('O arquivo CSV está vazio.');
+
+  const tokens = [];
+  let cur = '', inQ = false;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (ch === '"') {
+      if (inQ && text[i + 1] === '"') { cur += '"'; i++; continue; }
+      inQ = !inQ; cur += ch; continue;
+    }
+    if (ch === '\n' && !inQ) { tokens.push(cur); cur = ''; continue; }
+    cur += ch;
+  }
+  if (cur.trim()) tokens.push(cur);
+
+  if (tokens.length < 2) throw new Error('CSV com menos de 2 linhas — verifique a planilha.');
+
+  const sep = detectSeparator(tokens[0]);
+  const rawHeaders = splitCSVLine(tokens[0], sep);
+  const headers = rawHeaders.map(h => normalizeHeader(h.replace(/"/g, '')));
+
+  const missing = REQUIRED_COLS.filter(c => !headers.includes(c));
+  if (missing.length > 0) console.warn('[CSV] Colunas não encontradas:', missing.join(', '));
+
+  const rows = [];
+  for (let i = 1; i < tokens.length; i++) {
+    const line = tokens[i].trim();
+    if (!line) continue;
+
+    const vals = splitCSVLine(line, sep);
+    if (vals.length < Math.max(1, Math.floor(headers.length / 2))) continue;
+
+    const row = {};
+    headers.forEach((h, idx) => {
+      let v = (vals[idx] !== undefined ? vals[idx] : '').trim().replace(/^"|"$/g, '');
+      row[h] = v;
+    });
+
+    if (Object.values(row).every(v => !v)) continue;
+
+    var oc = (row['OCORRENCIA'] || '').trim();
+    if (/^\d+\.\d+[Ee][+\-]?\d+$/.test(oc)) {
+      row['OCORRENCIA'] = String(Math.round(parseFloat(oc)));
+    } else {
+      row['OCORRENCIA'] = oc;
+    }
+
+    row['__DATE_REALIZACAO']   = parseDate(row['DATA_DA_REALIZACAO']);
+    row['__DATE_CRIACAO_NOTA'] = parseDate(row['DATA_CRIACAO_NOTA']);
+    row['__VALOR']             = parseNum(row['VALOR']);
+
+    rows.push(row);
+  }
+
+  if (rows.length === 0) throw new Error('Nenhum registro válido encontrado no CSV.');
+  return rows;
+}
+
+/* ============================================================
+  CARREGAMENTO — CASCATA DE 5 PROXIES CORS
+============================================================ */
+
+function buildURL(base) {
+  var sep = base.includes('?') ? '&' : '?';
+  return base + sep + '_nc=' + Date.now();
+}
+
+function looksLikeCSV(text) {
+  var t = (text || '').trim();
+  if (!t || t.length < 5) return false;
+  if (t.startsWith('<!') || t.toLowerCase().startsWith('<html')) return false;
+  return true;
+}
+
+async function tryDirect(url) {
+  var r = await fetch(buildURL(url), { cache: 'no-store', mode: 'cors' });
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  var t = await r.text();
+  if (!looksLikeCSV(t)) throw new Error('Direto: resposta nao e CSV');
+  return t;
+}
+
+async function tryAlloriginsRaw(url) {
+  var proxy = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(buildURL(url));
+  var r = await fetch(proxy, { cache: 'no-store' });
+  if (!r.ok) throw new Error('allorigins/raw HTTP ' + r.status);
+  var t = await r.text();
+  if (!looksLikeCSV(t)) throw new Error('allorigins/raw: resposta nao e CSV');
+  return t;
+}
+
+async function tryCorsproxy(url) {
+  var proxy = 'https://corsproxy.io/?' + encodeURIComponent(buildURL(url));
+  var r = await fetch(proxy, { cache: 'no-store' });
+  if (!r.ok) throw new Error('corsproxy HTTP ' + r.status);
+  var t = await r.text();
+  if (!looksLikeCSV(t)) throw new Error('corsproxy: resposta nao e CSV');
+  return t;
+}
+
+async function tryAlloriginsGet(url) {
+  var proxy = 'https://api.allorigins.win/get?url=' + encodeURIComponent(buildURL(url));
+  var r = await fetch(proxy, { cache: 'no-store' });
+  if (!r.ok) throw new Error('allorigins/get HTTP ' + r.status);
+  var json = await r.json();
+  var t = (json && json.contents) ? json.contents : '';
+  if (!looksLikeCSV(t)) throw new Error('allorigins/get: conteudo nao e CSV');
+  return t;
+}
+
+async function tryThingproxy(url) {
+  var proxy = 'https://thingproxy.freeboard.io/fetch/' + buildURL(url);
+  var r = await fetch(proxy, { cache: 'no-store' });
+  if (!r.ok) throw new Error('thingproxy HTTP ' + r.status);
+  var t = await r.text();
+  if (!looksLikeCSV(t)) throw new Error('thingproxy: resposta nao e CSV');
+  return t;
+}
+
+async function fetchCSVWithFallback(url) {
+  var strategies = [
+    { name: 'Direto',        fn: tryDirect },
+    { name: 'allorigins/raw', fn: tryAlloriginsRaw },
+    { name: 'corsproxy.io',   fn: tryCorsproxy },
+    { name: 'allorigins/get', fn: tryAlloriginsGet },
+    { name: 'thingproxy',     fn: tryThingproxy },
+  ];
+
+  var errors = [];
+
+  for (var i = 0; i < strategies.length; i++) {
+    var s = strategies[i];
+    updateLoadingMsg('Tentando: ' + s.name + '…');
+    console.log('[Fetch] Tentando ' + s.name + '…');
+    try {
+      var text = await s.fn(url);
+      console.log('[Fetch] Sucesso via ' + s.name);
+      return { text: text, source: s.name };
+    } catch (e) {
+      console.warn('[Fetch] ' + s.name + ' falhou:', e.message);
+      errors.push(s.name + ': ' + e.message);
+    }
+  }
+
+  throw new Error(
+    'Todas as tentativas de conexao falharam. ' +
+    'Verifique: (1) Arquivo -> Publicar na web -> formato CSV, ' +
+    '(2) acesso publico ativado na planilha. ' +
+    'Detalhes: ' + errors.join(' | ')
+  );
+}
+
+async function loadData() {
+  showLoading(true);
+  hideError();
+  updateLoadingMsg('Iniciando conexao…');
+
+  try {
+    var result = await fetchCSVWithFallback(CSV_URL);
+    updateLoadingMsg('Processando dados…');
+
+    allData = parseCSV(result.text);
+    // [MELHORIA 1] Reseta selects e repopula ao recarregar dados
+    Object.keys(msState).forEach(k => msState[k].clear());
+    populateMultiSelects();
+    applyFilters();
+
+    var now = new Date().toLocaleString('pt-BR', {
+      day: '2-digit', month: '2-digit',
+      hour: '2-digit', minute: '2-digit', second: '2-digit',
+    });
+    document.getElementById('lastUpdate').textContent =
+      'Atualizado: ' + now + ' via ' + result.source;
+    console.log('[Dashboard] ' + allData.length + ' registros carregados via ' + result.source);
+
+    if (allData.length > 0) {
+      var cols = Object.keys(allData[0]).filter(k => !k.startsWith('__'));
+      console.log('[Colunas]', cols.join(' | '));
+      var prazoVals = [...new Set(allData.slice(0,50).map(r => r['PRAZO_DE_APLICACAO']))];
+      console.log('[PRAZO_DE_APLICACAO valores unicos]', prazoVals);
+    }
+
+  } catch (e) {
+    console.error('[Dashboard] Falha total:', e.message);
+    showError(e.message);
+  } finally {
+    showLoading(false);
+  }
+}
+
+function updateLoadingMsg(msg) {
+  var el = document.querySelector('#loadingOverlay .state-msg');
+  if (el) el.textContent = msg;
+}
+
+/* ============================================================
+  [MELHORIA 1] MULTI-SELECT — Implementação completa
+  Cada filtro suporta múltipla seleção com dropdown customizado
+============================================================ */
+
+/**
+ * Popula todos os multi-selects com os valores únicos das colunas.
+ * Chamado após loadData e ao limpar filtros.
+ */
+function populateMultiSelects() {
+  const cols = Object.keys(msState);
+  cols.forEach(col => {
+    const vals = uniqueVals(col);
+    buildMsDropdown(col, vals);
+    updateMsTrigger(col);
+  });
+  // Adicionar event listeners apenas uma vez
+  if (!window._msListenersAttached) {
+    attachMsListeners();
+    // Datas
+    ['filterDateFrom','filterDateTo'].forEach(id => {
+      document.getElementById(id).addEventListener('change', applyFilters);
+    });
+    window._msListenersAttached = true;
+  }
+}
+
+/** Monta as opções de checkbox dentro do dropdown */
+function buildMsDropdown(col, vals) {
+  const wrapper = document.getElementById('ms-' + col);
+  if (!wrapper) return;
+  const optionsEl = wrapper.querySelector('.ms-options');
+  optionsEl.innerHTML = '';
+  vals.forEach(v => {
+    const div = document.createElement('div');
+    div.className = 'ms-option' + (msState[col].has(v) ? ' selected' : '');
+    div.dataset.value = v;
+    const cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.checked = msState[col].has(v);
+    cb.addEventListener('change', () => {
+      if (cb.checked) msState[col].add(v);
+      else msState[col].delete(v);
+      div.classList.toggle('selected', cb.checked);
+      updateMsTrigger(col);
+      applyFilters();
+    });
+    div.appendChild(cb);
+    div.appendChild(document.createTextNode(v));
+    // Clicar na div também alterna o checkbox
+    div.addEventListener('click', e => {
+      if (e.target === cb) return;
+      cb.checked = !cb.checked;
+      cb.dispatchEvent(new Event('change'));
+    });
+    optionsEl.appendChild(div);
+  });
+}
+
+/** Atualiza o texto do trigger com resumo da seleção */
+function updateMsTrigger(col) {
+  const wrapper = document.getElementById('ms-' + col);
+  if (!wrapper) return;
+  const trigger = wrapper.querySelector('.ms-trigger');
+  const sel = msState[col];
+  const allVals = wrapper.querySelectorAll('.ms-option');
+  if (sel.size === 0) {
+    trigger.innerHTML = getPlaceholderText(col);
+  } else if (sel.size === 1) {
+    trigger.innerHTML = [...sel][0] + ' <span class="ms-count">1</span>';
+  } else if (sel.size === allVals.length) {
+    trigger.innerHTML = getPlaceholderText(col);
+  } else {
+    trigger.innerHTML = sel.size + ' selecionados <span class="ms-count">' + sel.size + '</span>';
+  }
+}
+
+function getPlaceholderText(col) {
+  const map = { SECCIONAL:'Todas', PROJETISTA:'Todos', STATUS:'Todos', EQUIPE:'Todas', CIDADE_DA_OC:'Todas' };
+  return map[col] || 'Todos';
+}
+
+/** Vincula eventos de abertura/fechamento e busca dentro dos dropdowns */
+function attachMsListeners() {
+  Object.keys(msState).forEach(col => {
+    const wrapper = document.getElementById('ms-' + col);
+    if (!wrapper) return;
+    const trigger  = wrapper.querySelector('.ms-trigger');
+    const dropdown = wrapper.querySelector('.ms-dropdown');
+    const searchEl = wrapper.querySelector('.ms-search input');
+    const btnAll   = wrapper.querySelector('.ms-btn-all');
+    const btnNone  = wrapper.querySelector('.ms-btn-none');
+
+    // Abrir/fechar
+    trigger.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isOpen = dropdown.classList.contains('open');
+      closeAllDropdowns();
+      if (!isOpen) {
+        dropdown.classList.add('open');
+        trigger.classList.add('open');
+        searchEl.value = '';
+        filterMsOptions(col, '');
+        searchEl.focus();
+      }
+    });
+
+    // Busca interna
+    searchEl.addEventListener('input', () => filterMsOptions(col, searchEl.value));
+
+    // Selecionar todos
+    btnAll.addEventListener('click', () => {
+      wrapper.querySelectorAll('.ms-option').forEach(opt => {
+        if (opt.style.display !== 'none') {
+          const v = opt.dataset.value;
+          msState[col].add(v);
+          opt.querySelector('input').checked = true;
+          opt.classList.add('selected');
+        }
+      });
+      updateMsTrigger(col);
+      applyFilters();
+    });
+
+    // Limpar seleção
+    btnNone.addEventListener('click', () => {
+      msState[col].clear();
+      wrapper.querySelectorAll('.ms-option').forEach(opt => {
+        opt.querySelector('input').checked = false;
+        opt.classList.remove('selected');
+      });
+      updateMsTrigger(col);
+      applyFilters();
+    });
+
+    // Fechar ao clicar fora
+    dropdown.addEventListener('click', e => e.stopPropagation());
+  });
+
+  document.addEventListener('click', closeAllDropdowns);
+}
+
+/** Filtra opções do dropdown pela busca */
+function filterMsOptions(col, query) {
+  const wrapper = document.getElementById('ms-' + col);
+  if (!wrapper) return;
+  const q = query.toLowerCase();
+  wrapper.querySelectorAll('.ms-option').forEach(opt => {
+    opt.style.display = opt.dataset.value.toLowerCase().includes(q) ? '' : 'none';
+  });
+}
+
+/** Fecha todos os dropdowns abertos */
+function closeAllDropdowns() {
+  document.querySelectorAll('.ms-dropdown.open').forEach(d => d.classList.remove('open'));
+  document.querySelectorAll('.ms-trigger.open').forEach(t => t.classList.remove('open'));
+}
+
+/* ============================================================
+  FILTROS — APLICAÇÃO
+============================================================ */
+
+function uniqueVals(col) {
+  const s = new Set(allData.map(r => r[col]).filter(v => v && v !== ''));
+  return [...s].sort();
+}
+
+/** [MELHORIA 1] applyFilters agora considera múltiplos valores selecionados */
+function applyFilters() {
+  const dateFrom = parseDate(document.getElementById('filterDateFrom').value);
+  const dateTo   = parseDate(document.getElementById('filterDateTo').value);
+
+  filteredData = allData.filter(r => {
+    // Multi-selects: Set vazio = sem restrição (todos)
+    if (msState.SECCIONAL.size    > 0 && !msState.SECCIONAL.has(r['SECCIONAL']))       return false;
+    if (msState.PROJETISTA.size   > 0 && !msState.PROJETISTA.has(r['PROJETISTA']))     return false;
+    if (msState.STATUS.size       > 0 && !msState.STATUS.has(r['STATUS']))             return false;
+    if (msState.EQUIPE.size       > 0 && !msState.EQUIPE.has(r['EQUIPE']))             return false;
+    if (msState.CIDADE_DA_OC.size > 0 && !msState.CIDADE_DA_OC.has(r['CIDADE_DA_OC'])) return false;
+    // Datas
+    if (dateFrom && r['__DATE_REALIZACAO'] && r['__DATE_REALIZACAO'] < dateFrom) return false;
+    if (dateTo   && r['__DATE_REALIZACAO'] && r['__DATE_REALIZACAO'] > dateTo)   return false;
+    return true;
+  });
+
+  render();
+}
+
+function clearFilters() {
+  // Limpa multi-selects
+  Object.keys(msState).forEach(col => {
+    msState[col].clear();
+    const wrapper = document.getElementById('ms-' + col);
+    if (wrapper) {
+      wrapper.querySelectorAll('.ms-option').forEach(opt => {
+        opt.querySelector('input').checked = false;
+        opt.classList.remove('selected');
+      });
+      updateMsTrigger(col);
+    }
+  });
+  document.getElementById('filterDateFrom').value = '';
+  document.getElementById('filterDateTo').value   = '';
+  applyFilters();
+}
+
+/* ============================================================
+  RENDER CENTRAL
+============================================================ */
+function render() {
+  updateKPIs();
+  renderChartStatusPrazo();
+  renderChartProducao();
+  renderChartAtraso();
+  renderChartSeccional();
+  renderChartEvolucao();
+  renderChartStatusSap();
+  renderChartCliente();
+  renderChartTr();
+  renderInsights();
+  renderDashEqtl();
+  renderDashPcp();
+  renderTable();
+}
+
+/* ============================================================
+  KPIs
+  [MELHORIA 2] 3 novos KPIs: Ordens Criadas, PEPs via SAP, Enviado ao Fechamento
+  [MELHORIA 3] Críticas e Dentro do Prazo excluem registros "Enviado ao Fechamento"
+============================================================ */
+function updateKPIs() {
+  const data  = filteredData;
+  const total = data.length;
+
+  // [MELHORIA 3] Filtra apenas ocorrências EM ANDAMENTO (não enviadas ao fechamento)
+  const emAndamento = data.filter(r => !isEnviadoFechamento(r));
+
+  const criticas = emAndamento.filter(r => isCritico(r['PRAZO_DE_APLICACAO'])).length;
+  const prazo    = emAndamento.filter(r => isDentroPrazo(r['PRAZO_DE_APLICACAO'])).length;
+  const valor    = data.reduce((s, r) => s + (r['__VALOR'] || 0), 0);
+  const projetos = data.filter(r => r['NOTA_PROJ'] && r['NOTA_PROJ'].trim().startsWith('4')).length;
+
+  // [MELHORIA 2A] Ordens Criadas: PEP_ORDEM contém "ORDEM" (case-insensitive)
+  const ordens = data.filter(r => (r['PEP_ORDEM'] || '').toUpperCase().includes('ORDEM')).length;
+
+  // [MELHORIA 2B] PEPs via SAP: NOTA_PROJ começa com "0"
+  const pepsSap = data.filter(r => (r['NOTA_PROJ'] || '').trim().startsWith('0')).length;
+
+  // [MELHORIA 2C] Enviado ao Fechamento
+  const fechamento = data.filter(r => isEnviadoFechamento(r)).length;
+
+  setText('kpiTotal',      total.toLocaleString('pt-BR'));
+  setText('kpiCriticas',   criticas.toLocaleString('pt-BR'));
+  setText('kpiPrazo',      prazo.toLocaleString('pt-BR'));
+  setText('kpiValor',      fmtBRL(valor));
+  setText('kpiProjetos',   projetos.toLocaleString('pt-BR'));
+  setText('kpiOrdens',     ordens.toLocaleString('pt-BR'));
+  setText('kpiPepsSap',    pepsSap.toLocaleString('pt-BR'));
+  setText('kpiFechamento', fechamento.toLocaleString('pt-BR'));
+
+  // Cards de fila — 4 status individuais, some se zerado
+  function normStr(s) {
+    return (s || '').toLowerCase().trim().normalize('NFD').replace(/[̀-ͯ]/g, '');
+  }
+  function setFilaCard(cardId, kpiId, count) {
+    const card = document.getElementById(cardId);
+    if (card) card.style.display = count === 0 ? 'none' : '';
+    setText(kpiId, count.toLocaleString('pt-BR'));
+  }
+
+  const filaNaFila   = data.filter(r => normStr(r['STATUS']).includes('na fila para projeto')).length;
+  const filaPend     = data.filter(r => {
+    const ns = normStr(r['STATUS']);
+    return ns.includes('pendencia de informacao pra projetar') ||
+           ns.includes('pendencia de informacao para projetar');
+  }).length;
+  const filaCadastro = data.filter(r => normStr(r['STATUS']).includes('oc em cadastro')).length;
+  const filaExecucao = data.filter(r => {
+    const ns = normStr(r['STATUS']);
+    return ns.includes('aguardando execucao em campo') ||
+           ns.includes('execucao em campo');
+  }).length;
+
+  setFilaCard('cardFilaNaFila',   'kpiFilaNaFila',   filaNaFila);
+  setFilaCard('cardFilaPendencia','kpiFilaPendencia', filaPend);
+  setFilaCard('cardFilaCadastro', 'kpiFilaCadastro',  filaCadastro);
+  setFilaCard('cardFilaExecucao', 'kpiFilaExecucao',  filaExecucao);
+}
+
+/* ============================================================
+  GRÁFICO 1 — Status x Prazo (barras empilhadas)
+  Labels do eixo X quebrados em múltiplas linhas (máx 16 chars/linha)
+============================================================ */
+
+/**
+ * Quebra um rótulo longo em array de linhas para o Chart.js.
+ * Chart.js aceita arrays de strings como label — cada elemento = uma linha.
+ * Estratégia: quebra em palavras, agrupa até maxChars por linha.
+ */
+function wrapLabel(text, maxChars) {
+  maxChars = maxChars || 16;
+  const words = text.split(' ');
+  const lines = [];
+  let cur = '';
+  words.forEach(w => {
+    if (!cur) { cur = w; return; }
+    if ((cur + ' ' + w).length <= maxChars) {
+      cur += ' ' + w;
+    } else {
+      lines.push(cur);
+      cur = w;
+    }
+  });
+  if (cur) lines.push(cur);
+  return lines.length === 1 ? lines[0] : lines;
+}
+
+function renderChartStatusPrazo() {
+  const byStatus = groupBy(filteredData, 'STATUS');
+  const labels = Object.keys(byStatus);
+
+  const dentroCounts = labels.map(s =>
+    byStatus[s].filter(r => isDentroPrazo(r['PRAZO_DE_APLICACAO'])).length
+  );
+  const maisCounts = labels.map(s =>
+    byStatus[s].filter(r => isCritico(r['PRAZO_DE_APLICACAO'])).length
+  );
+
+  const total = filteredData.length;
+  const pct = total > 0 ? Math.round(filteredData.filter(r => isDentroPrazo(r['PRAZO_DE_APLICACAO'])).length / total * 100) : 0;
+  setText('badge1', pct + '% no prazo');
+
+  const wrappedLabels = labels.map(l => wrapLabel(l, 16));
+
+  updateChart('chartStatusPrazo', 'bar', wrappedLabels,
+    [
+      { label: 'Dentro de 48h', data: dentroCounts, backgroundColor: C.green },
+      { label: 'Mais de 48h',   data: maisCounts,   backgroundColor: C.red   },
+    ],
+    {
+      scales: {
+        x: {
+          stacked: true,
+          ticks: {
+            font: { family: 'DM Sans', size: 10 },
+            color: '#6b7280',
+            maxRotation: 0,   // sem rotação — o wrap já resolve
+            autoSkip: false,
+          }
+        },
+        y: { stacked: true }
+      },
+      datalabels: true
+    }
+  );
+}
+
+/* ============================================================
+  GRÁFICO 2 — Produção por Projetista
+  [MELHORIA 4] Valores dentro das barras
+============================================================ */
+function renderChartProducao() {
+  const counts = countBy(filteredData, 'PROJETISTA');
+  const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 15);
+  updateChart('chartProducao', 'bar',
+    sorted.map(e => e[0] || '(vazio)'),
+    [{ label: 'Ocorrências', data: sorted.map(e => e[1]), backgroundColor: C.green }],
+    { indexAxis: 'y', datalabels: true }
+  );
+}
+
+/* ============================================================
+  GRÁFICO 3 — Atraso por Projetista
+  [MELHORIA 4] Valores dentro das barras
+============================================================ */
+function renderChartAtraso() {
+  // Exclui "Enviado ao Fechamento" — foco apenas no que está pendente com o projetista
+  const pendentes = filteredData.filter(r => !isEnviadoFechamento(r));
+  const proj = [...new Set(pendentes.map(r => r['PROJETISTA']))].filter(Boolean).sort();
+  const dentro = proj.map(p =>
+    pendentes.filter(r => r['PROJETISTA'] === p && isDentroPrazo(r['PRAZO_DE_APLICACAO'])).length
+  );
+  const mais = proj.map(p =>
+    pendentes.filter(r => r['PROJETISTA'] === p && isCritico(r['PRAZO_DE_APLICACAO'])).length
+  );
+
+  updateChart('chartAtraso', 'bar', proj.map(p => p || '(vazio)'),
+    [
+      { label: 'Dentro de 48h', data: dentro, backgroundColor: C.green },
+      { label: 'Mais de 48h',   data: mais,   backgroundColor: C.red   },
+    ],
+    { indexAxis: 'y', scales: { x: { stacked: true }, y: { stacked: true } }, datalabels: true }
+  );
+}
+
+/* ============================================================
+  GRÁFICO 4 — Ocorrências por Seccional
+  [MELHORIA 4] Valores dentro das barras
+============================================================ */
+function renderChartSeccional() {
+  const counts = countBy(filteredData, 'SECCIONAL');
+  const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+  updateChart('chartSeccional', 'bar',
+    sorted.map(e => e[0] || '(vazio)'),
+    [{ label: 'Ocorrências', data: sorted.map(e => e[1]), backgroundColor: C.green }],
+    { datalabels: true }
+  );
+}
+
+/* ============================================================
+  GRÁFICO 5 — Evolução temporal (linha)
+  [MELHORIA 4] Valores nos pontos
+============================================================ */
+function renderChartEvolucao() {
+  const byDate = {};
+  filteredData.forEach(r => {
+    if (!r['__DATE_REALIZACAO']) return;
+    const key = r['__DATE_REALIZACAO'].toLocaleDateString('pt-BR');
+    byDate[key] = (byDate[key] || 0) + 1;
+  });
+
+  const sorted = Object.entries(byDate).sort((a, b) => {
+    return parseDate(a[0]) - parseDate(b[0]);
+  });
+
+  updateChart('chartEvolucao', 'line',
+    sorted.map(e => e[0]),
+    [{
+      label: 'Ocorrências',
+      data: sorted.map(e => e[1]),
+      borderColor: C.greenDark,
+      backgroundColor: 'rgba(16,185,129,.12)',
+      fill: true,
+      tension: 0.4,
+      pointRadius: 3,
+      pointBackgroundColor: C.green,
+    }],
+    { datalabels: true }
+  );
+}
+
+/* ============================================================
+  GRÁFICO 6 — Status SAP (donut)
+  [MELHORIA 4] Valores nos segmentos
+============================================================ */
+function renderChartStatusSap() {
+  const counts = countBy(filteredData, 'STATUS_SAP');
+  const sorted = Object.entries(counts).filter(e => e[0]).sort((a,b) => b[1]-a[1]);
+  const n = sorted.length;
+
+  // Ajusta altura do container proporcionalmente ao numero de barras
+  const wrap = document.getElementById('chartStatusSapWrap');
+  if (wrap) wrap.style.height = Math.max(180, n * 36 + 40) + 'px';
+
+  updateChart('chartStatusSap', 'bar',
+    sorted.map(e => e[0] || '(vazio)'),
+    [{ label: 'Ocorrências', data: sorted.map(e => e[1]),
+       backgroundColor: greenPalette(n), borderRadius: 4 }],
+    { indexAxis: 'y', datalabels: true,
+      plugins: { legend: { display: false } } }
+  );
+}
+
+/* ============================================================
+  GRÁFICO 7 — Cliente Desligado (donut)
+  [MELHORIA 4] Valores nos segmentos
+============================================================ */
+function renderChartCliente() {
+  const counts = countBy(filteredData, 'CLIENTE_DESLIGADO');
+  const entries = Object.entries(counts);
+  const colors = entries.map(e => {
+    const v = (e[0] || '').toLowerCase();
+    if (v === 'sim' || v === 's') return C.red;
+    if (v === 'não' || v === 'nao' || v === 'n') return C.green;
+    return C.gray;
+  });
+  updateChart('chartCliente', 'doughnut',
+    entries.map(e => e[0] || '(vazio)'),
+    [{ data: entries.map(e => e[1]), backgroundColor: colors, borderWidth: 2, borderColor: '#fff' }],
+    { cutout: '62%', datalabels: true }
+  );
+}
+
+/* ============================================================
+  GRÁFICO 8 — Possui TR (donut)
+  [MELHORIA 4] Valores nos segmentos
+============================================================ */
+function renderChartTr() {
+  const counts = countBy(filteredData, 'POSSUI_TR');
+  const entries = Object.entries(counts);
+  const colors = entries.map(e => {
+    const v = (e[0] || '').toLowerCase();
+    if (v === 'sim' || v === 's') return C.green;
+    if (v === 'não' || v === 'nao' || v === 'n') return C.red;
+    return C.gray;
+  });
+  updateChart('chartTr', 'doughnut',
+    entries.map(e => e[0] || '(vazio)'),
+    [{ data: entries.map(e => e[1]), backgroundColor: colors, borderWidth: 2, borderColor: '#fff' }],
+    { cutout: '62%', datalabels: true }
+  );
+}
+
+/* ============================================================
+  INSIGHTS OPERACIONAIS
+  [MELHORIA 5] % de críticas calculada somente sobre registros em andamento
+============================================================ */
+function renderInsights() {
+  const data  = filteredData;
+  const total = data.length;
+
+  // Ocorrências EM ANDAMENTO (excluindo "Enviado ao Fechamento")
+  const emAndamento = data.filter(r => !isEnviadoFechamento(r));
+  const totalAndamento = emAndamento.length;
+
+  const cntProj = countBy(data, 'PROJETISTA');
+  const topProj = Object.entries(cntProj).sort((a, b) => b[1] - a[1])[0];
+
+  const cntSec = countBy(data, 'SECCIONAL');
+  const topSec = Object.entries(cntSec).sort((a, b) => b[1] - a[1])[0];
+
+  // [MELHORIA 5] % críticas somente sobre em andamento
+  const criticas   = emAndamento.filter(r => isCritico(r['PRAZO_DE_APLICACAO'])).length;
+  const pctCrit    = totalAndamento > 0 ? ((criticas / totalAndamento) * 100).toFixed(1) : 0;
+
+  const valor = data.reduce((s, r) => s + (r['__VALOR'] || 0), 0);
+
+  const cntStatus = countBy(data, 'STATUS');
+  const topStatus = Object.entries(cntStatus).sort((a, b) => b[1] - a[1])[0];
+
+  // Projetista com mais atrasos
+  const cntAtraso = {};
+  emAndamento.forEach(r => {
+    if (!isCritico(r['PRAZO_DE_APLICACAO'])) return;
+    const p = r['PROJETISTA'] || '(vazio)';
+    cntAtraso[p] = (cntAtraso[p] || 0) + 1;
+  });
+  const topAtraso = Object.entries(cntAtraso).sort((a, b) => b[1] - a[1])[0];
+
+  const insights = [
+    {
+      label:    'Projetista Mais Ativo',
+      value:    topProj ? topProj[0] || '—' : '—',
+      desc:     topProj ? `${topProj[1]} ocorrências` : '',
+      critical: false,
+    },
+    {
+      label:    'Seccional Líder',
+      value:    topSec ? topSec[0] || '—' : '—',
+      desc:     topSec ? `${topSec[1]} ocorrências` : '',
+      critical: false,
+    },
+    {
+      label:    '% de Críticas (>48h)',
+      value:    pctCrit + '%',
+      // [MELHORIA 5] Denominator é totalAndamento
+      desc:     `${criticas} de ${totalAndamento} em andamento`,
+      critical: parseFloat(pctCrit) > 40,
+    },
+    {
+      label:    'Valor Movimentado',
+      value:    fmtBRL(valor),
+      desc:     'soma de todos os registros filtrados',
+      critical: false,
+    },
+    {
+      label:    'Status Predominante',
+      value:    topStatus ? topStatus[0] || '—' : '—',
+      desc:     topStatus ? `${topStatus[1]} registros` : '',
+      critical: false,
+    },
+    {
+      label:    'Projetista c/ Mais Atrasos',
+      value:    topAtraso ? topAtraso[0] || '—' : '—',
+      desc:     topAtraso ? `${topAtraso[1]} atrasos em andamento` : 'sem atrasos',
+      critical: !!topAtraso && topAtraso[1] > 3,
+    },
+  ];
+
+  const grid = document.getElementById('insightsGrid');
+  grid.innerHTML = insights.map(i => `
+    <div class="insight-item ${i.critical ? 'critical' : ''}">
+      <div class="insight-item-label">${i.label}</div>
+      <div class="insight-item-value">${i.value}</div>
+      <div class="insight-item-desc">${i.desc}</div>
+    </div>
+  `).join('');
+}
+
+/* ============================================================
+  TABELA OPERACIONAL — com ordenação clicável por coluna
+============================================================ */
+
+// Estado de ordenação da tabela
+const tableSort = { col: null, dir: 1 }; // dir: 1=asc, -1=desc
+
+/** Chamado ao clicar num cabeçalho — alterna asc/desc ou define nova coluna */
+function sortTable(col) {
+  if (tableSort.col === col) {
+    tableSort.dir *= -1; // inverte direção
+  } else {
+    tableSort.col = col;
+    tableSort.dir = 1;
+  }
+  // Atualiza classes visuais nos <th>
+  document.querySelectorAll('thead th.sortable').forEach(th => {
+    th.classList.remove('sort-asc', 'sort-desc');
+    if (th.dataset.col === col) {
+      th.classList.add(tableSort.dir === 1 ? 'sort-asc' : 'sort-desc');
+    }
+  });
+  renderTable();
+}
+
+/** Retorna valor comparável para uma linha e coluna */
+function getSortVal(r, col) {
+  if (col === '__DATE_REALIZACAO') return r['__DATE_REALIZACAO'] ? r['__DATE_REALIZACAO'].getTime() : 0;
+  if (col === '__VALOR')           return r['__VALOR'] != null ? r['__VALOR'] : -Infinity;
+  if (col === 'PRAZO_DE_APLICACAO') {
+    // Ordenar: crítico > dentro > outros
+    if (isCritico(r['PRAZO_DE_APLICACAO']))    return 0;
+    if (isDentroPrazo(r['PRAZO_DE_APLICACAO'])) return 1;
+    return 2;
+  }
+  return (r[col] || '').toString().toLowerCase();
+}
+
+function renderTable() {
+  let data = [...filteredData];
+
+  if (tableSort.col) {
+    // Ordenação manual pelo usuário
+    data.sort((a, b) => {
+      const av = getSortVal(a, tableSort.col);
+      const bv = getSortVal(b, tableSort.col);
+      if (av < bv) return -1 * tableSort.dir;
+      if (av > bv) return  1 * tableSort.dir;
+      return 0;
+    });
+  } else {
+    // Ordenação padrão: fechamento ao final, críticos primeiro, depois data
+    data.sort((a, b) => {
+      const aEnv = isEnviadoFechamento(a);
+      const bEnv = isEnviadoFechamento(b);
+      if (aEnv !== bEnv) return aEnv ? 1 : -1;
+      const aIs48 = isCritico(a['PRAZO_DE_APLICACAO']);
+      const bIs48 = isCritico(b['PRAZO_DE_APLICACAO']);
+      if (aIs48 !== bIs48) return aIs48 ? -1 : 1;
+      const da = a['__DATE_REALIZACAO'] || new Date(9999, 0, 1);
+      const db = b['__DATE_REALIZACAO'] || new Date(9999, 0, 1);
+      return da - db;
+    });
+  }
+
+  setText('tableCount', data.length.toLocaleString('pt-BR') + ' registros');
+
+  const tbody = document.getElementById('tableBody');
+  if (data.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--gray-400)">Nenhum registro encontrado.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = data.map(r => {
+    // [MELHORIA 6] Lógica do badge de prazo
+    let prazoBadge;
+    if (isEnviadoFechamento(r)) {
+      prazoBadge = `<span class="badge badge-blue">Enviado ao fechamento</span>`;
+    } else if (isCritico(r['PRAZO_DE_APLICACAO'])) {
+      prazoBadge = `<span class="badge badge-red">Mais de 48h</span>`;
+    } else if (isDentroPrazo(r['PRAZO_DE_APLICACAO'])) {
+      prazoBadge = `<span class="badge badge-green">Dentro de 48h</span>`;
+    } else {
+      prazoBadge = `<span class="badge badge-gray">${r['PRAZO_DE_APLICACAO'] || '—'}</span>`;
+    }
+
+    const statusBadge = r['STATUS']
+      ? `<span class="badge badge-gray">${r['STATUS']}</span>`
+      : '—';
+
+    return `
+      <tr>
+        <td class="td-oc">${r['OCORRENCIA'] || '—'}</td>
+        <td>${statusBadge}</td>
+        <td>${r['PROJETISTA'] || '—'}</td>
+        <td>${r['SECCIONAL'] || '—'}</td>
+        <td>${fmtDate(r['__DATE_REALIZACAO'])}</td>
+        <td>${prazoBadge}</td>
+        <td class="td-valor">${r['__VALOR'] != null ? fmtBRL(r['__VALOR']) : '—'}</td>
+      </tr>
+    `;
+  }).join('');
+}
+
+/* ============================================================
+  UTILITÁRIO — CHART.JS
+  [MELHORIA 4] Plugin de datalabels embutido — sem dependência externa.
+  Exibe valores dentro das barras/segmentos com contorno branco.
+============================================================ */
+
+/**
+ * Plugin inline que renderiza os valores diretamente no canvas.
+ * Aplica-se a todos os tipos de gráfico quando extraOpts.datalabels = true.
+ */
+const inlineDataLabelsPlugin = {
+  id: 'inlineDataLabels',
+  afterDatasetsDraw(chart, args, pluginOptions) {
+    if (!chart.config.options._datalabels) return;
+    const { ctx } = chart;
+    const type = chart.config.type;
+
+    chart.data.datasets.forEach((dataset, datasetIndex) => {
+      const meta = chart.getDatasetMeta(datasetIndex);
+      if (meta.hidden) return;
+
+      meta.data.forEach((element, index) => {
+        const value = dataset.data[index];
+        if (value === 0 || value == null) return;
+
+        ctx.save();
+
+        // Cor do texto: mesma cor da barra/segmento
+        const bgColor = Array.isArray(dataset.backgroundColor)
+          ? dataset.backgroundColor[index]
+          : dataset.backgroundColor;
+
+        if (type === 'doughnut' || type === 'pie') {
+          // Posição central do segmento
+          const cx = element.x;
+          const cy = element.y;
+          const startAngle = element.startAngle;
+          const endAngle   = element.endAngle;
+          const midAngle   = (startAngle + endAngle) / 2;
+          const outerRadius = element.outerRadius;
+          const innerRadius = element.innerRadius || 0;
+          const r = (outerRadius + innerRadius) / 2;
+          const x = cx + Math.cos(midAngle) * r;
+          const y = cy + Math.sin(midAngle) * r;
+
+          ctx.font = 'bold 12px DM Sans, sans-serif';
+          ctx.textAlign    = 'center';
+          ctx.textBaseline = 'middle';
+
+          // Contorno branco
+          ctx.lineWidth     = 3;
+          ctx.strokeStyle   = 'rgba(255,255,255,0.9)';
+          ctx.lineJoin      = 'round';
+          ctx.strokeText(String(value), x, y);
+
+          ctx.fillStyle = bgColor || '#374151';
+          ctx.fillText(String(value), x, y);
+
+        } else if (type === 'line') {
+          // Pontos da linha: valor acima do ponto
+          const x = element.x;
+          const y = element.y;
+
+          ctx.font         = 'bold 11px DM Sans, sans-serif';
+          ctx.textAlign    = 'center';
+          ctx.textBaseline = 'bottom';
+
+          ctx.lineWidth   = 3;
+          ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+          ctx.lineJoin    = 'round';
+          ctx.strokeText(String(value), x, y - 4);
+
+          ctx.fillStyle = bgColor || C.greenDark;
+          ctx.fillText(String(value), x, y - 4);
+
+        } else {
+          // bar / horizontalBar
+          const isHorizontal = chart.config.options.indexAxis === 'y';
+          let x, y;
+
+          if (isHorizontal) {
+            // Barra horizontal: label no meio da barra
+            const xStart = element.base;
+            const xEnd   = element.x;
+            const barWidth = Math.abs(xEnd - xStart);
+            x = xStart + (xEnd - xStart) / 2;
+            y = element.y;
+
+            // Só mostra se a barra for larga o suficiente
+            const minWidth = 18;
+            if (barWidth < minWidth) { ctx.restore(); return; }
+
+            ctx.font         = 'bold 11px DM Sans, sans-serif';
+            ctx.textAlign    = 'center';
+            ctx.textBaseline = 'middle';
+          } else {
+            // Barra vertical: label dentro se couber, senão acima
+            const yStart = element.base;
+            const yEnd   = element.y;
+            const barHeight = Math.abs(yEnd - yStart);
+            x = element.x;
+
+            const minHeightInside = 20;
+            let labelAbove = false;
+
+            if (barHeight < minHeightInside) {
+              // Label acima da barra
+              y = Math.min(yStart, yEnd) - 4;
+              labelAbove = true;
+            } else {
+              // Label no centro da barra
+              y = yEnd + (yStart - yEnd) / 2;
+            }
+
+            ctx.font         = 'bold 11px DM Sans, sans-serif';
+            ctx.textAlign    = 'center';
+            ctx.textBaseline = labelAbove ? 'bottom' : 'middle';
+          }
+
+          // Texto na cor da barra, borda branca — dentro E acima da barra
+          const isAbove = ctx.textBaseline === 'bottom';
+          ctx.lineWidth   = isAbove ? 2 : 3;
+          ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+          ctx.lineJoin    = 'round';
+          ctx.strokeText(String(value), x, y);
+
+          ctx.fillStyle = bgColor || '#374151';
+          ctx.fillText(String(value), x, y);
+        }
+
+        ctx.restore();
+      });
+    });
+  },
+};
+
+// Registra o plugin globalmente no Chart.js
+Chart.register(inlineDataLabelsPlugin);
+
+/** Cria ou atualiza um gráfico Chart.js no canvas especificado */
+function updateChart(id, type, labels, datasets, extraOpts = {}) {
+  const canvas = document.getElementById(id);
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+
+  if (charts[id]) {
+    charts[id].destroy();
+    delete charts[id];
+  }
+
+  // Passa flag de datalabels para as options (lido pelo plugin)
+  const useDatalabels = !!extraOpts.datalabels;
+  delete extraOpts.datalabels; // remove antes de passar para Chart.js
+
+  const baseOpts = {
+    responsive: true,
+    maintainAspectRatio: false,
+    _datalabels: useDatalabels, // flag custom lida pelo plugin
+    plugins: {
+      legend: {
+        display: type === 'doughnut' || datasets.length > 1,
+        position: 'bottom',
+        labels: { font: { family: 'DM Sans', size: 11 }, boxWidth: 10, padding: 12, color: '#4b5563' },
+      },
+      tooltip: {
+        backgroundColor: '#1f2937',
+        titleFont: { family: 'DM Sans', size: 12 },
+        bodyFont:  { family: 'DM Sans', size: 12 },
+        padding: 10,
+        cornerRadius: 8,
+      },
+    },
+    scales: type === 'doughnut' ? {} : {
+      x: {
+        grid: { color: '#f3f4f6' },
+        ticks: { font: { family: 'DM Sans', size: 11 }, color: '#6b7280', maxRotation: 35 },
+      },
+      y: {
+        grid: { color: '#f3f4f6' },
+        ticks: { font: { family: 'DM Sans', size: 11 }, color: '#6b7280' },
+        beginAtZero: true,
+      },
+      ...extraOpts.scales,
+    },
+    ...extraOpts,
+  };
+
+  if (type === 'doughnut') delete baseOpts.scales;
+
+  charts[id] = new Chart(ctx, { type, data: { labels, datasets }, options: baseOpts });
+}
+
+/* ============================================================
+  UTILITÁRIOS GERAIS
+============================================================ */
+function groupBy(arr, key) {
+  return arr.reduce((acc, r) => {
+    const v = r[key] || '(vazio)';
+    if (!acc[v]) acc[v] = [];
+    acc[v].push(r);
+    return acc;
+  }, {});
+}
+
+function countBy(arr, key) {
+  return arr.reduce((acc, r) => {
+    const v = r[key] || '';
+    if (!v) return acc;
+    acc[v] = (acc[v] || 0) + 1;
+    return acc;
+  }, {});
+}
+
+function setText(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = val;
+}
+
+function showLoading(v) {
+  document.getElementById('loadingOverlay').classList.toggle('visible', v);
+}
+
+function showError(msg) {
+  const box = document.getElementById('errorBox');
+  document.getElementById('errorMsg').textContent = msg;
+  box.classList.add('visible');
+}
+
+function hideError() {
+  document.getElementById('errorBox').classList.remove('visible');
+}
+
+/* ============================================================
+  DASHBOARD: Pendente de Criação de Nota PROJ/PEP - EQTL
+  Status: Aguardando Liberação da Logística, Chamado PROJ - Criação,
+          Aguardando Assinatura AEO EQTL, Aguardando Criação da Ordem,
+          Aguardando Criação da PEP
+============================================================ */
+const EQTL_STATUS = [
+  'Aguardando Liberação da Logística',
+  'Chamado PROJ - Criação',
+  'Aguardando Assinatura AEO EQTL',
+  'Aguardando Criação da Ordem',
+  'Aguardando Criação da PEP',
+];
+
+function normStatus(s) {
+  return (s || '').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+
+function matchStatus(row, statusList) {
+  const ns = normStatus(row['STATUS']);
+  return statusList.some(s => normStatus(s) === ns);
+}
+
+function renderDashEqtl() {
+  const data = filteredData;
+  const eqtlRows = data.filter(r => matchStatus(r, EQTL_STATUS));
+
+  // Conta por status
+  const counts = {};
+  EQTL_STATUS.forEach(s => { counts[s] = 0; });
+  eqtlRows.forEach(r => {
+    const match = EQTL_STATUS.find(s => normStatus(s) === normStatus(r['STATUS']));
+    if (match) counts[match]++;
+  });
+
+  const total = EQTL_STATUS.reduce((a, s) => a + counts[s], 0);
+
+  // Ordenar os status por contagem crescente (menor → maior, esq → dir)
+  const sorted = EQTL_STATUS.map(s => ({
+    label: s,
+    count: counts[s],
+    dentro: eqtlRows.filter(r => normStatus(r['STATUS']) === normStatus(s) && isDentroPrazo(r['PRAZO_DE_APLICACAO'])).length,
+    mais:   eqtlRows.filter(r => normStatus(r['STATUS']) === normStatus(s) && isCritico(r['PRAZO_DE_APLICACAO'])).length,
+  })).sort((a, b) => a.count - b.count);
+
+  // Adiciona coluna Total no final
+  sorted.push({ label: 'TOTAL', count: total, dentro: sorted.reduce((a,x)=>a+x.dentro,0), mais: sorted.reduce((a,x)=>a+x.mais,0) });
+
+  const pct48 = total > 0 ? Math.round(sorted.slice(0,-1).reduce((a,x)=>a+x.dentro,0) / total * 100) : 0;
+  setText('badgeEqtlPareto', pct48 + '% ≤ 48h');
+
+  const wrappedLabels = sorted.map(x => x.label === 'TOTAL' ? 'TOTAL' : wrapLabel(x.label, 18));
+
+  // Arrays de cor por barra — TOTAL usa as mesmas cores dos outros itens
+  const bgDentro = sorted.map(() => C.green);
+  const bgMais   = sorted.map(() => C.red);
+  const bgSimples = sorted.map(() => C.green);
+
+  // Gráfico pareto com 48h + Total (mesmas cores verde/vermelho para todos, inclusive TOTAL)
+  updateChart('chartEqtlPareto', 'bar', wrappedLabels,
+    [
+      { label: 'Dentro de 48h', data: sorted.map(x => x.dentro), backgroundColor: bgDentro },
+      { label: 'Mais de 48h',   data: sorted.map(x => x.mais),   backgroundColor: bgMais   },
+    ],
+    {
+      scales: {
+        x: { stacked: true, ticks: { font: { family: 'DM Sans', size: 10 }, color: '#6b7280', maxRotation: 0, autoSkip: false } },
+        y: { stacked: true }
+      },
+      datalabels: true
+    }
+  );
+
+  // Gráfico barras simples (verde) + Total também verde
+  updateChart('chartEqtlSimples', 'bar', wrappedLabels,
+    [{ label: 'Ocorrências', data: sorted.map(x => x.count), backgroundColor: bgSimples, borderRadius: 5 }],
+    {
+      scales: {
+        x: { ticks: { font: { family: 'DM Sans', size: 10 }, color: '#6b7280', maxRotation: 0, autoSkip: false } },
+      },
+      datalabels: true,
+      plugins: { legend: { display: false } }
+    }
+  );
+
+  // Tabela resumo EQTL — ordenada crescente (sem Total no meio)
+  const tbody = document.getElementById('tbodyEqtl');
+  if (tbody) {
+    const sortedForTable = sorted.filter(x => x.label !== 'TOTAL').slice(); // já está ordenada
+    let rows = sortedForTable.map(x =>
+      `<tr><td>${x.label}</td><td class="td-count">${x.count.toLocaleString('pt-BR')}</td></tr>`
+    ).join('');
+    rows += `<tr class="total-row"><td><strong>Total</strong></td><td class="td-count">${total.toLocaleString('pt-BR')}</td></tr>`;
+    tbody.innerHTML = rows;
+  }
+}
+
+/* ============================================================
+  DASHBOARD: Pendente de Criação - PCP SETUP
+  Status: OC em Cadastro, Pendência de Informação pra Projetas,
+          Na Fila para Projeto, Em projeto, Aguardando Assinatura AEO Setup,
+          PEP FIM Liberada, Aguardando Execução em Campo,
+          Enviar via GPM, Cancelado - Tratar
+============================================================ */
+const PCP_STATUS = [
+  'OC em Cadastro',
+  'Pendência de Informação pra Projetas',
+  'Na Fila para Projeto',
+  'Em projeto',
+  'Aguardando Assinatura AEO Setup',
+  'PEP FIM Liberada',
+  'Aguardando Execução em Campo',
+  'Enviar via GPM',
+  'Cancelado - Tratar',
+];
+
+function renderDashPcp() {
+  const data = filteredData;
+
+  const counts = {};
+  PCP_STATUS.forEach(s => { counts[s] = 0; });
+
+  data.forEach(r => {
+    const ns = normStatus(r['STATUS']);
+    const match = PCP_STATUS.find(s => normStatus(s) === ns);
+    if (match) counts[match]++;
+  });
+
+  const total = PCP_STATUS.reduce((a, s) => a + counts[s], 0);
+
+  const pcpRows = data.filter(r => PCP_STATUS.some(s => normStatus(s) === normStatus(r['STATUS'])));
+
+  // Ordenar os status por contagem crescente (menor → maior, esq → dir)
+  const sorted = PCP_STATUS.map(s => ({
+    label: s,
+    count: counts[s],
+    dentro: pcpRows.filter(r => normStatus(r['STATUS']) === normStatus(s) && isDentroPrazo(r['PRAZO_DE_APLICACAO'])).length,
+    mais:   pcpRows.filter(r => normStatus(r['STATUS']) === normStatus(s) && isCritico(r['PRAZO_DE_APLICACAO'])).length,
+  })).sort((a, b) => a.count - b.count);
+
+  // Adiciona coluna Total no final
+  sorted.push({ label: 'TOTAL', count: total, dentro: sorted.reduce((a,x)=>a+x.dentro,0), mais: sorted.reduce((a,x)=>a+x.mais,0) });
+
+  const pct48 = total > 0 ? Math.round(sorted.slice(0,-1).reduce((a,x)=>a+x.dentro,0) / total * 100) : 0;
+  setText('badgePcpPareto', pct48 + '% ≤ 48h');
+
+  const wrappedLabels = sorted.map(x => x.label === 'TOTAL' ? 'TOTAL' : wrapLabel(x.label, 18));
+
+  // Arrays de cor por barra — TOTAL usa as mesmas cores verde/vermelho
+  const bgDentro = sorted.map(() => C.green);
+  const bgMais   = sorted.map(() => C.red);
+
+  // Gráfico pareto PCP com 48h + Total (mesmas cores para todos, inclusive TOTAL)
+  updateChart('chartPcpPareto', 'bar', wrappedLabels,
+    [
+      { label: 'Dentro de 48h', data: sorted.map(x => x.dentro), backgroundColor: bgDentro },
+      { label: 'Mais de 48h',   data: sorted.map(x => x.mais),   backgroundColor: bgMais   },
+    ],
+    {
+      scales: {
+        x: { stacked: true, ticks: { font: { family: 'DM Sans', size: 10 }, color: '#6b7280', maxRotation: 0, autoSkip: false } },
+        y: { stacked: true }
+      },
+      datalabels: true
+    }
+  );
+
+  // Tabela resumo PCP — ordenada crescente (sem Total no meio)
+  const tbody = document.getElementById('tbodyPcp');
+  if (tbody) {
+    const sortedForTable = sorted.filter(x => x.label !== 'TOTAL');
+    let rows = sortedForTable.map(x =>
+      `<tr><td>${x.label}</td><td class="td-count">${x.count.toLocaleString('pt-BR')}</td></tr>`
+    ).join('');
+    rows += `<tr class="total-row"><td><strong>Total</strong></td><td class="td-count">${total.toLocaleString('pt-BR')}</td></tr>`;
+    tbody.innerHTML = rows;
+  }
+}
+
+/* ============================================================
+  EXPORTAR TABELA OPERACIONAL PARA XLSX
+  Exporta os dados filtrados atualmente exibidos na tabela
+============================================================ */
+function exportTableXLSX() {
+  if (!filteredData || filteredData.length === 0) {
+    alert('Nenhum dado filtrado para exportar.');
+    return;
+  }
+
+  const rows = [];
+
+  // Cabeçalho
+  rows.push(['Ocorrência', 'Status', 'Projetista', 'Seccional', 'Realização', 'Prazo', 'Valor (R$)']);
+
+  // Dados
+  filteredData.forEach(r => {
+    let prazoLabel;
+    if (isEnviadoFechamento(r)) {
+      prazoLabel = 'Enviado ao fechamento';
+    } else if (isCritico(r['PRAZO_DE_APLICACAO'])) {
+      prazoLabel = 'Mais de 48h';
+    } else if (isDentroPrazo(r['PRAZO_DE_APLICACAO'])) {
+      prazoLabel = 'Dentro de 48h';
+    } else {
+      prazoLabel = r['PRAZO_DE_APLICACAO'] || '';
+    }
+
+    rows.push([
+      r['OCORRENCIA']        || '',
+      r['STATUS']            || '',
+      r['PROJETISTA']        || '',
+      r['SECCIONAL']         || '',
+      r['__DATE_REALIZACAO'] ? fmtDate(r['__DATE_REALIZACAO']) : '',
+      prazoLabel,
+      r['__VALOR'] != null   ? r['__VALOR'] : '',
+    ]);
+  });
+
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+
+  // Estilo de largura de colunas
+  ws['!cols'] = [
+    { wch: 16 }, { wch: 38 }, { wch: 22 }, { wch: 18 },
+    { wch: 14 }, { wch: 22 }, { wch: 16 },
+  ];
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Tabela Operacional');
+
+  const now = new Date();
+  const stamp = now.toLocaleDateString('pt-BR').replace(/\//g, '-') + '_' +
+    now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }).replace(':', 'h');
+  XLSX.writeFile(wb, 'Tabela_Operacional_' + stamp + '.xlsx');
+}
+
+/* ============================================================
+  INICIALIZAÇÃO
+============================================================ */
+document.addEventListener('DOMContentLoaded', loadData);
+</script>
+</body>
+</html>
