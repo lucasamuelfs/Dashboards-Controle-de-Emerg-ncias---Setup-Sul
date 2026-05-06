@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- ✅ CORREÇÃO DO ZOOM -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Dashboard de Controle de Emergências</title>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      overflow-x: hidden; /* evita corte lateral */
+    }
+
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+
+      background: linear-gradient(rgba(0,50,20,0.8), rgba(0,50,20,0.95)),
+                  url("SUA-IMAGEM-AQUI.jpg");
+      background-size: cover;
+      background-position: center;
+
+      padding: 20px;
+    }
+
+    h1 {
+      color: #fff;
+      font-weight: bold;
+      line-height: 1.1;
+
+      /* ✅ CORREÇÃO DO ZOOM */
+      font-size: clamp(32px, 6vw, 72px);
+    }
+
+    h1 span {
+      color: #00e676;
+    }
+
+    p {
+      color: #ccc;
+      margin-top: 20px;
+      max-width: 700px;
+
+      /* ✅ CORREÇÃO DO ZOOM */
+      font-size: clamp(14px, 1.5vw, 18px);
+    }
+
+    .btn {
+      margin-top: 40px;
+      padding: 16px 40px;
+      background: #00c853;
+      color: #000;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    .btn:hover {
+      background: #00e676;
+      transform: scale(1.05);
+    }
+
+  </style>
+</head>
+
+<body>
+
+  <section class="hero">
+
+    <h1>
+      DASHBOARD DE CONTROLE<br>
+      DE <span>EMERGÊNCIAS</span>
+    </h1>
+
+    <p>
+      Acompanhe em tempo real os indicadores de manutenções emergenciais
+      executadas em campo e produtividade de criações.
+    </p>
+
+    <!-- ✅ BOTÃO CORRIGIDO -->
+    <button class="btn" onclick="irDashboard()">
+      ACESSAR DASHBOARD →
+    </button>
+
+  </section>
+
+  <!-- ✅ SCRIPT DO BOTÃO -->
+  <script>
+    function irDashboard() {
+      window.location.href = "dashboard.html";
+    }
+  </script>
+
+</body>
+</html>
